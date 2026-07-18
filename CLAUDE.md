@@ -4,6 +4,11 @@ Guidance for Claude Code (and any AI agent) working in this repository. This fil
 is the single source of truth for project context — read it fully before starting
 work, then you can pick up any task without re-discovering the codebase.
 
+> **Sibling AI-context files point here.** `AGENTS.md` (OpenAI Codex / GPT / Cursor),
+> `GEMINI.md` (Gemini), and `.github/copilot-instructions.md` (Copilot) are concise
+> orientations that defer to this file. When the architecture changes materially,
+> update this file first; the others are short and rarely need edits.
+
 ## What PostBox is
 
 A desktop app that combines **two tools in one**:
