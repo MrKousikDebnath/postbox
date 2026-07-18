@@ -6,7 +6,6 @@ import { textPrompt } from './PromptHost'
 
 interface Props {
   onSendToClient: (req: ApiRequest) => void
-  onSaveSession: (session: RecordingSession) => void
 }
 
 type Filter = 'all' | 'xhr' | 'doc' | 'js' | 'other'
@@ -24,11 +23,15 @@ const FILTER_MAP: Record<string, Filter> = {
   Other: 'other'
 }
 
-export default function Recorder({ onSendToClient, onSaveSession }: Props): React.JSX.Element {
+type SessionRequest = RecordedRequest & { responseBody?: string }
+
+export default function Recorder({ onSendToClient }: Props): React.JSX.Element {
   const [available, setAvailable] = useState<boolean | null>(null)
   const [targets, setTargets] = useState<CdpTarget[]>([])
   const [attachedTo, setAttachedTo] = useState<CdpTarget | null>(null)
   const [records, setRecords] = useState<Map<string, RecordedRequest>>(new Map())
+  const [sessions, setSessions] = useState<RecordingSession[]>([])
+  const [viewing, setViewing] = useState<RecordingSession | null>(null)
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [body, setBody] = useState<string | null>(null)
   const [filter, setFilter] = useState<Filter>('xhr')
@@ -51,6 +54,7 @@ export default function Recorder({ onSendToClient, onSaveSession }: Props): Reac
 
   useEffect(() => {
     void refreshAvailability()
+    void window.api.loadSessions().then(setSessions)
     const offUpdate = window.api.onCdpRequestUpdate((rec) => {
       setRecords((prev) => {
         const next = new Map(prev)
@@ -68,6 +72,14 @@ export default function Recorder({ onSendToClient, onSaveSession }: Props): Reac
       offDetach()
     }
   }, [refreshAvailability])
+
+  // The tab list is a snapshot; poll while the user is picking a tab so
+  // pages opened in the debug Chrome show up without a manual refresh.
+  useEffect(() => {
+    if (!available || attachedTo || viewing) return
+    const timer = setInterval(() => void refreshAvailability(), 3000)
+    return () => clearInterval(timer)
+  }, [available, attachedTo, viewing, refreshAvailability])
 
   const launchChrome = async (): Promise<void> => {
     setBusy(true)
@@ -90,6 +102,7 @@ export default function Recorder({ onSendToClient, onSaveSession }: Props): Reac
   const attach = async (target: CdpTarget): Promise<void> => {
     setBusy(true)
     setError(null)
+    setViewing(null)
     try {
       await window.api.cdpAttach(target.id)
       setAttachedTo(target)
@@ -132,7 +145,10 @@ export default function Recorder({ onSendToClient, onSaveSession }: Props): Reac
   const selectRecord = async (rec: RecordedRequest): Promise<void> => {
     setSelectedId(rec.requestId)
     setBody(null)
-    if (rec.finished && !rec.failed) {
+    if (viewing) {
+      const saved = rec as SessionRequest
+      setBody(saved.responseBody ?? '<< body was not captured in this session >>')
+    } else if (rec.finished && !rec.failed) {
       setBody(await window.api.cdpGetBody(rec.requestId))
     }
   }
@@ -143,33 +159,76 @@ export default function Recorder({ onSendToClient, onSaveSession }: Props): Reac
     )?.trim()
     if (!name) return
     const all = [...records.values()]
-    const withBodies = await Promise.all(
+    const withBodies: SessionRequest[] = await Promise.all(
       all.map(async (r) => ({
         ...r,
         responseBody: r.finished && !r.failed ? await window.api.cdpGetBody(r.requestId) : undefined
       }))
     )
-    onSaveSession({
+    const session: RecordingSession = {
       id: uid(),
       name,
       timestamp: Date.now(),
       targetUrl: attachedRef.current?.url ?? '',
       requests: withBodies
-    })
+    }
+    const next = [session, ...sessions]
+    setSessions(next)
+    await window.api.saveSessions(next)
   }
 
-  const list = [...records.values()]
+  const openSession = async (session: RecordingSession): Promise<void> => {
+    if (attachedTo) await detach()
+    setViewing(session)
+    setSelectedId(null)
+    setBody(null)
+    setError(null)
+  }
+
+  const closeSession = (): void => {
+    setViewing(null)
+    setSelectedId(null)
+    setBody(null)
+  }
+
+  const deleteSession = async (id: string): Promise<void> => {
+    const target = sessions.find((s) => s.id === id)
+    if (!confirm(`Delete session "${target?.name}"?`)) return
+    const next = sessions.filter((s) => s.id !== id)
+    setSessions(next)
+    await window.api.saveSessions(next)
+    if (viewing?.id === id) closeSession()
+  }
+
+  const source: RecordedRequest[] = viewing ? viewing.requests : [...records.values()]
+  const list = source
     .filter((r) => filter === 'all' || FILTER_MAP[r.resourceType] === filter)
     .filter((r) => !search || r.url.toLowerCase().includes(search.toLowerCase()))
     .sort((a, b) => a.startTime - b.startTime)
 
-  const selected = selectedId ? (records.get(selectedId) ?? null) : null
+  const selected = selectedId ? (list.find((r) => r.requestId === selectedId) ?? null) : null
 
   return (
     <div className="recorder">
       <div className="rec-toolbar">
         <span className={`rec-status-dot ${attachedTo ? 'live' : ''}`} />
-        {available === false && (
+
+        {viewing && (
+          <>
+            <span className="dim">Viewing session:</span>
+            <span className="mono" style={{ fontWeight: 700 }}>
+              {viewing.name}
+            </span>
+            <span className="dim">
+              {viewing.requests.length} requests · {new Date(viewing.timestamp).toLocaleString()}
+            </span>
+            <button className="btn primary" onClick={closeSession}>
+              ← Back to live
+            </button>
+          </>
+        )}
+
+        {!viewing && available === false && (
           <>
             <span className="dim">Chrome is not running with a debug port.</span>
             <button className="btn primary" disabled={busy} onClick={launchChrome}>
@@ -180,7 +239,8 @@ export default function Recorder({ onSendToClient, onSaveSession }: Props): Reac
             </button>
           </>
         )}
-        {available && !attachedTo && (
+
+        {!viewing && available && !attachedTo && (
           <>
             <span className="dim">Attach to a tab:</span>
             <select
@@ -199,12 +259,13 @@ export default function Recorder({ onSendToClient, onSaveSession }: Props): Reac
                 </option>
               ))}
             </select>
-            <button className="btn" onClick={refreshAvailability}>
-              Refresh tabs
-            </button>
+            <span className="dim" style={{ fontSize: 12 }}>
+              Tip: browse in the debug Chrome window (no bookmarks bar) — this list auto-refreshes.
+            </span>
           </>
         )}
-        {attachedTo && (
+
+        {!viewing && attachedTo && (
           <>
             <span
               className="mono"
@@ -231,6 +292,33 @@ export default function Recorder({ onSendToClient, onSaveSession }: Props): Reac
             </button>
           </>
         )}
+
+        {!viewing && sessions.length > 0 && (
+          <select
+            title="Open a saved session"
+            onChange={(e) => {
+              const s = sessions.find((s) => s.id === e.target.value)
+              if (s) void openSession(s)
+              e.target.value = ''
+            }}
+            value=""
+          >
+            <option value="" disabled>
+              📼 Sessions ({sessions.length})…
+            </option>
+            {sessions.map((s) => (
+              <option key={s.id} value={s.id}>
+                {s.name} — {s.requests.length} reqs
+              </option>
+            ))}
+          </select>
+        )}
+        {viewing && (
+          <button className="btn small" onClick={() => void deleteSession(viewing.id)}>
+            Delete session
+          </button>
+        )}
+
         <span className="spacer" />
         <div className="rec-filter">
           {(['xhr', 'doc', 'js', 'other', 'all'] as Filter[]).map((f) => (
@@ -257,9 +345,11 @@ export default function Recorder({ onSendToClient, onSaveSession }: Props): Reac
         <div className="rec-list">
           {list.length === 0 ? (
             <div className="empty-note">
-              {attachedTo
-                ? 'No requests captured yet. Hit "Reload & Record" or interact with the page.'
-                : 'Attach to a Chrome tab to start recording network traffic.'}
+              {viewing
+                ? 'No requests in this session match the current filter.'
+                : attachedTo
+                  ? 'No requests captured yet. Hit "Reload & Record" or interact with the page.'
+                  : 'Attach to a Chrome tab to record, or open a saved session.'}
             </div>
           ) : (
             <table className="rec-table">

@@ -4,8 +4,7 @@ import type {
   ApiResponse,
   Collection,
   Environment,
-  HistoryEntry,
-  RecordingSession
+  HistoryEntry
 } from '../../shared/types'
 import Sidebar from './components/Sidebar'
 import RequestBuilder from './components/RequestBuilder'
@@ -124,12 +123,6 @@ export default function App(): React.JSX.Element {
     setView('client')
   }
 
-  const saveSession = async (session: RecordingSession): Promise<void> => {
-    const sessions = await window.api.loadSessions()
-    await window.api.saveSessions([session, ...sessions])
-    alert(`Session "${session.name}" saved (${session.requests.length} requests).`)
-  }
-
   return (
     <div className="app">
       <div className="topbar">
@@ -193,7 +186,7 @@ export default function App(): React.JSX.Element {
         )}
         {view === 'recorder' && (
           <div className="main">
-            <Recorder onSendToClient={openRequest} onSaveSession={(s) => void saveSession(s)} />
+            <Recorder onSendToClient={openRequest} />
           </div>
         )}
       </div>
