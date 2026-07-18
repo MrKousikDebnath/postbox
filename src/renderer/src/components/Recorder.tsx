@@ -320,11 +320,18 @@ export default function Recorder({ onSendToClient }: Props): React.JSX.Element {
             >
               {attachedTo.url ? attachedTo.url.replace(/^https?:\/\//, '') : attachedTo.title}
             </span>
-            <button className="btn primary" onClick={reload}>
-              ⟳ Reload &amp; Record
-            </button>
-            <button className="btn" onClick={clear}>
+            <span className="rec-live-badge" title="Recording live — just interact with the page">
+              ● REC
+            </span>
+            <button className="btn" onClick={clear} title="Clear captured requests (no reload)">
               Clear
+            </button>
+            <button
+              className="btn"
+              onClick={reload}
+              title="Hard-reload the page and capture a fresh load. Note: single-page apps (search results, logged-in views) may reset to their start page on reload."
+            >
+              ⟳ Reload
             </button>
             <button className="btn" onClick={saveSession} disabled={records.size === 0}>
               Save Session
@@ -398,7 +405,7 @@ export default function Recorder({ onSendToClient }: Props): React.JSX.Element {
               {viewing
                 ? 'No requests in this session match the current filter.'
                 : attachedTo
-                  ? 'No requests captured yet. Hit "Reload & Record" or interact with the page.'
+                  ? 'Recording live — interact with the page (click, search, navigate) and requests appear here. Use ⟳ Reload only to capture a fresh full page load.'
                   : 'Attach to a Chrome tab to record, or open a saved session.'}
             </div>
           ) : (

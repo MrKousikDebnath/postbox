@@ -631,6 +631,28 @@ input[type='checkbox'] {
   box-shadow: 0 0 10px var(--green);
 }
 
+.rec-live-badge {
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--green);
+  padding: 3px 8px;
+  border: 1px solid rgba(76, 175, 125, 0.4);
+  border-radius: 99px;
+  background: rgba(76, 175, 125, 0.12);
+  animation: recpulse 2s ease-in-out infinite;
+}
+
+@keyframes recpulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.55;
+  }
+}
+
 .rec-split {
   display: flex;
   flex: 1;
