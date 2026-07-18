@@ -100,6 +100,24 @@ export default function Recorder({ onSendToClient }: Props): React.JSX.Element {
     return () => clearInterval(timer)
   }, [available, attachedTo, viewing, refreshAvailability])
 
+  // While attached, keep the shown URL current — SPAs (like IRCTC) navigate
+  // client-side without a reload, so the tab title goes stale but the URL moves.
+  useEffect(() => {
+    if (!attachedTo || viewing) return
+    const timer = setInterval(async () => {
+      try {
+        const fresh = (await window.api.cdpListTargets()).find((t) => t.id === attachedTo.id)
+        if (fresh && (fresh.url !== attachedTo.url || fresh.title !== attachedTo.title)) {
+          setAttachedTo(fresh)
+          attachedRef.current = fresh
+        }
+      } catch {
+        // Chrome busy; try again next tick
+      }
+    }, 2000)
+    return () => clearInterval(timer)
+  }, [attachedTo, viewing])
+
   const launchChrome = async (): Promise<void> => {
     setBusy(true)
     setError(null)
@@ -272,11 +290,15 @@ export default function Recorder({ onSendToClient }: Props): React.JSX.Element {
               <option value="" disabled>
                 {targets.length ? 'Select tab…' : 'No tabs found'}
               </option>
-              {targets.map((t) => (
-                <option key={t.id} value={t.id}>
-                  {(t.title || t.url).slice(0, 80)}
-                </option>
-              ))}
+              {targets.map((t) => {
+                const host = t.url ? t.url.replace(/^https?:\/\//, '').slice(0, 60) : ''
+                const label = host ? `${t.title.slice(0, 40)} — ${host}` : t.title
+                return (
+                  <option key={t.id} value={t.id}>
+                    {label.slice(0, 90)}
+                  </option>
+                )
+              })}
             </select>
             <span className="dim" style={{ fontSize: 12 }}>
               Tip: browse in the debug Chrome window (no bookmarks bar) — this list auto-refreshes.
@@ -288,6 +310,7 @@ export default function Recorder({ onSendToClient }: Props): React.JSX.Element {
           <>
             <span
               className="mono"
+              title={attachedTo.url || attachedTo.title}
               style={{
                 maxWidth: 340,
                 overflow: 'hidden',
@@ -295,7 +318,7 @@ export default function Recorder({ onSendToClient }: Props): React.JSX.Element {
                 whiteSpace: 'nowrap'
               }}
             >
-              {attachedTo.title || attachedTo.url}
+              {attachedTo.url ? attachedTo.url.replace(/^https?:\/\//, '') : attachedTo.title}
             </span>
             <button className="btn primary" onClick={reload}>
               ⟳ Reload &amp; Record
