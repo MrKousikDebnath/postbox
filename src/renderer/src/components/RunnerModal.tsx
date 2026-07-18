@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import type { ApiRequest, Collection, Environment } from '../../../shared/types'
-import { buildExecutable, statusClass } from '../util'
-import { runTestScript, type TestResult } from '../lib/scripts'
+import { statusClass } from '../util'
+import { type TestResult } from '../lib/scripts'
+import { runRequest } from '../lib/runtime'
 
 interface Props {
   collection: Collection
@@ -32,15 +33,10 @@ export default function RunnerModal({ collection, env, onClose }: Props): React.
   const run = async (): Promise<void> => {
     setRunning(true)
     cancelled.current = false
-    // env vars are shared across the run so pm.environment.set chains between requests
-    const envVars: Record<string, string> = {}
+    // Live vars accumulate across requests so pm.environment.set chains through the run.
+    const liveVars: Record<string, string> = {}
     for (const v of env?.variables ?? []) {
-      if (v.enabled) envVars[v.key] = v.value
-    }
-    const liveEnv: Environment = {
-      id: 'runner',
-      name: 'runner',
-      variables: []
+      if (v.enabled) liveVars[v.key] = v.value
     }
 
     const requests = allRequests(collection)
@@ -48,32 +44,26 @@ export default function RunnerModal({ collection, env, onClose }: Props): React.
       if (cancelled.current) break
       const req = requests[i]
       setRows((prev) => prev.map((r, idx) => (idx === i ? { ...r, state: 'running' } : r)))
-      liveEnv.variables = Object.entries(envVars).map(([key, value]) => ({
-        key,
-        value,
-        enabled: true
-      }))
+      const liveEnv: Environment = {
+        id: 'runner',
+        name: 'runner',
+        variables: Object.entries(liveVars).map(([key, value]) => ({ key, value, enabled: true }))
+      }
       try {
-        const exec = buildExecutable(req, liveEnv)
-        const res = await window.api.sendRequest(exec)
-        let tests: TestResult[] = []
-        if (req.testScript?.trim()) {
-          const outcome = runTestScript(req.testScript, res, { ...envVars })
-          tests = outcome.tests
-          if (outcome.scriptError) {
-            tests = [...tests, { name: 'script error', passed: false, error: outcome.scriptError }]
-          }
-          Object.assign(envVars, outcome.envUpdates)
-        }
+        const result = await runRequest(req, collection, liveEnv)
+        Object.assign(liveVars, result.envUpdates)
+        const tests: TestResult[] = result.scriptError
+          ? [...result.tests, { name: 'script error', passed: false, error: result.scriptError }]
+          : result.tests
         setRows((prev) =>
           prev.map((r, idx) =>
             idx === i
               ? {
                   ...r,
                   state: 'done',
-                  status: res.status,
-                  timeMs: res.timeMs,
-                  error: res.error,
+                  status: result.response.status,
+                  timeMs: result.response.timeMs,
+                  error: result.response.error,
                   tests
                 }
               : r

@@ -13,7 +13,8 @@ interface Props {
   onSave: () => void
 }
 
-type Tab = 'params' | 'headers' | 'body' | 'auth' | 'tests'
+type Tab = 'params' | 'headers' | 'body' | 'auth' | 'scripts'
+type ScriptTab = 'pre' | 'post'
 type Lang = 'curl' | 'fetch' | 'axios'
 
 export default function RequestBuilder({
@@ -24,6 +25,7 @@ export default function RequestBuilder({
   onSave
 }: Props): React.JSX.Element {
   const [tab, setTab] = useState<Tab>('params')
+  const [scriptTab, setScriptTab] = useState<ScriptTab>('pre')
   const [showCode, setShowCode] = useState(false)
   const [lang, setLang] = useState<Lang>('curl')
   const [copied, setCopied] = useState(false)
@@ -89,7 +91,12 @@ export default function RequestBuilder({
             ['headers', `Headers${count(request.headers)}`],
             ['body', 'Body'],
             ['auth', 'Auth'],
-            ['tests', request.testScript?.trim() ? 'Tests ●' : 'Tests']
+            [
+              'scripts',
+              request.preRequestScript?.trim() || request.testScript?.trim()
+                ? 'Scripts ●'
+                : 'Scripts'
+            ]
           ] as [Tab, string][]
         ).map(([t, label]) => (
           <button key={t} className={tab === t ? 'active' : ''} onClick={() => setTab(t)}>
@@ -229,22 +236,57 @@ export default function RequestBuilder({
             )}
           </div>
         )}
-        {tab === 'tests' && (
+        {tab === 'scripts' && (
           <div>
-            <p className="dim" style={{ marginTop: 0 }}>
-              Postman-style test script — runs after the response arrives. Available:{' '}
-              <span className="mono">
-                pm.test, pm.expect, pm.response.code/json()/text()/headers.get(),
-                pm.environment.get/set
-              </span>
-            </p>
-            <textarea
-              rows={12}
-              style={{ width: '100%' }}
-              value={request.testScript ?? ''}
-              placeholder={`pm.test('status is 200', () => {\n  pm.expect(pm.response.code).to.equal(200)\n})\n\npm.test('has userId', () => {\n  pm.expect(pm.response.json()).to.have.property('userId')\n})`}
-              onChange={(e) => patch({ testScript: e.target.value })}
-            />
+            <div className="view-switch" style={{ marginBottom: 10, width: 'fit-content' }}>
+              <button
+                className={scriptTab === 'pre' ? 'active' : ''}
+                onClick={() => setScriptTab('pre')}
+              >
+                Pre-request{request.preRequestScript?.trim() ? ' ●' : ''}
+              </button>
+              <button
+                className={scriptTab === 'post' ? 'active' : ''}
+                onClick={() => setScriptTab('post')}
+              >
+                Post-response{request.testScript?.trim() ? ' ●' : ''}
+              </button>
+            </div>
+            {scriptTab === 'pre' ? (
+              <>
+                <p className="dim" style={{ marginTop: 0 }}>
+                  Runs <b>before</b> the request is sent. Set variables used in{' '}
+                  <span className="mono">{'{{...}}'}</span>. Available:{' '}
+                  <span className="mono">
+                    pm.environment.get/set, pm.variables.set, console.log
+                  </span>
+                </p>
+                <textarea
+                  rows={11}
+                  style={{ width: '100%' }}
+                  value={request.preRequestScript ?? ''}
+                  placeholder={`// e.g. compute a timestamp or nonce\npm.environment.set('ts', String(Date.now()))\npm.environment.set('nonce', Math.random().toString(36).slice(2))`}
+                  onChange={(e) => patch({ preRequestScript: e.target.value })}
+                />
+              </>
+            ) : (
+              <>
+                <p className="dim" style={{ marginTop: 0 }}>
+                  Runs <b>after</b> the response arrives. Available:{' '}
+                  <span className="mono">
+                    pm.test, pm.expect, pm.response.code/json()/text()/headers.get(),
+                    pm.environment.get/set
+                  </span>
+                </p>
+                <textarea
+                  rows={11}
+                  style={{ width: '100%' }}
+                  value={request.testScript ?? ''}
+                  placeholder={`pm.test('status is 200', () => {\n  pm.expect(pm.response.code).to.equal(200)\n})\n\npm.test('has userId', () => {\n  pm.expect(pm.response.json()).to.have.property('userId')\n})`}
+                  onChange={(e) => patch({ testScript: e.target.value })}
+                />
+              </>
+            )}
           </div>
         )}
       </div>

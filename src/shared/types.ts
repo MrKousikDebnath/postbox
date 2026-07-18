@@ -21,6 +21,7 @@ export interface ApiRequest {
   body: string
   formBody: KeyValue[]
   auth: AuthConfig
+  preRequestScript?: string
   testScript?: string
 }
 
@@ -46,6 +47,11 @@ export interface Collection {
   name: string
   folders: Folder[]
   requests: ApiRequest[]
+  description?: string
+  variables?: KeyValue[]
+  auth?: AuthConfig
+  preRequestScript?: string
+  testScript?: string
 }
 
 export interface HistoryEntry {

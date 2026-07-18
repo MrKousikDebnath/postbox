@@ -12,6 +12,7 @@ interface Props {
   onCollectionsChange: (c: Collection[]) => void
   onOpenRequest: (req: ApiRequest) => void
   onRunCollection: (col: Collection) => void
+  onEditCollection: (col: Collection) => void
 }
 
 type SortMode = 'manual' | 'name' | 'method'
@@ -22,7 +23,8 @@ export default function Sidebar({
   activeRequestId,
   onCollectionsChange,
   onOpenRequest,
-  onRunCollection
+  onRunCollection,
+  onEditCollection
 }: Props): React.JSX.Element {
   const [tab, setTab] = useState<'collections' | 'history'>('collections')
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set())
@@ -352,6 +354,16 @@ export default function Sidebar({
                       }}
                     >
                       ▶
+                    </button>
+                    <button
+                      className="icon"
+                      title="Edit collection (scripts, auth, variables)"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        onEditCollection(col)
+                      }}
+                    >
+                      ⚙
                     </button>
                     <button
                       className="icon"

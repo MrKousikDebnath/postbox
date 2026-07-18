@@ -230,3 +230,86 @@ export function runTestScript(
 
   return { tests, envUpdates, consoleLines, scriptError }
 }
+
+/**
+ * Pre-request script runner. Runs before the request is built/sent, so there is
+ * no response — `pm.response` throws. Variables set here flow into `{{var}}`
+ * substitution for the outgoing request.
+ */
+export function runPreRequestScript(
+  script: string,
+  envVars: Record<string, string>
+): ScriptOutcome {
+  const tests: TestResult[] = []
+  const envUpdates: Record<string, string> = {}
+  const consoleLines: string[] = []
+  const env: Record<string, string> = { ...envVars }
+
+  const noResponse = (): never => {
+    throw new Error('pm.response is not available in a pre-request script')
+  }
+
+  const pm = {
+    get response(): never {
+      return noResponse()
+    },
+    environment: {
+      get: (key: string): string | undefined => env[key],
+      set: (key: string, value: string): void => {
+        const stored = String(value)
+        env[key] = stored
+        envUpdates[key] = stored
+      },
+      unset: (key: string): void => {
+        delete env[key]
+        delete envUpdates[key]
+      }
+    },
+    // alias — Postman exposes both pm.environment and pm.variables
+    variables: {
+      get: (key: string): string | undefined => env[key],
+      set: (key: string, value: string): void => {
+        const stored = String(value)
+        env[key] = stored
+        envUpdates[key] = stored
+      }
+    },
+    expect: (actual: unknown) => makeExpect(actual),
+    test: (name: string, fn: () => void): void => {
+      try {
+        fn()
+        tests.push({ name, passed: true })
+      } catch (err) {
+        tests.push({ name, passed: false, error: err instanceof Error ? err.message : String(err) })
+      }
+    }
+  }
+
+  const consoleShim = {
+    log: (...args: unknown[]): void => {
+      consoleLines.push(
+        args
+          .map((arg) => {
+            if (typeof arg === 'string') return arg
+            try {
+              const json = JSON.stringify(arg)
+              return json === undefined ? String(arg) : json
+            } catch {
+              return String(arg)
+            }
+          })
+          .join(' ')
+      )
+    }
+  }
+
+  let scriptError: string | undefined
+  try {
+    const fn = new Function('pm', 'console', script)
+    fn(pm, consoleShim)
+  } catch (err) {
+    scriptError = err instanceof Error ? err.message : String(err)
+  }
+
+  return { tests, envUpdates, consoleLines, scriptError }
+}

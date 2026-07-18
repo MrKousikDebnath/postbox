@@ -12,10 +12,12 @@ import ResponseViewer from './components/ResponseViewer'
 import Recorder from './components/Recorder'
 import EnvironmentManager from './components/EnvironmentManager'
 import RunnerModal from './components/RunnerModal'
+import CollectionEditor from './components/CollectionEditor'
 import PromptHost, { textPrompt } from './components/PromptHost'
 import ThemePicker from './components/ThemePicker'
-import { buildExecutable, emptyRequest, uid } from './util'
-import { runTestScript, type ScriptOutcome } from './lib/scripts'
+import { emptyRequest, uid } from './util'
+import { runRequest } from './lib/runtime'
+import { type ScriptOutcome } from './lib/scripts'
 import { loadTheme } from './themes'
 
 type View = 'client' | 'recorder'
@@ -28,6 +30,7 @@ export default function App(): React.JSX.Element {
   const [activeEnvId, setActiveEnvId] = useState<string>('')
   const [showEnvManager, setShowEnvManager] = useState(false)
   const [runningCollection, setRunningCollection] = useState<Collection | null>(null)
+  const [editingCollectionId, setEditingCollectionId] = useState<string | null>(null)
   const [theme, setTheme] = useState<string>(() => loadTheme())
 
   const [tabs, setTabs] = useState<ApiRequest[]>(() => [emptyRequest()])
@@ -102,40 +105,52 @@ export default function App(): React.JSX.Element {
     setTestOutcomes((prev) => ({ ...prev, [id]: null }))
   }
 
+  const owningCollection = (reqId: string): Collection | null => {
+    for (const c of collections) {
+      if (c.requests.some((r) => r.id === reqId)) return c
+      if (c.folders.some((f) => f.requests.some((r) => r.id === reqId))) return c
+    }
+    return null
+  }
+
   const send = async (req: ApiRequest): Promise<void> => {
     setSending((s) => ({ ...s, [req.id]: true }))
     setResponses((r) => ({ ...r, [req.id]: null }))
     setTestOutcomes((t) => ({ ...t, [req.id]: null }))
     try {
-      const exec = buildExecutable(req, activeEnv)
-      const res = await window.api.sendRequest(exec)
-      setResponses((r) => ({ ...r, [req.id]: res }))
+      const collection = owningCollection(req.id)
+      const result = await runRequest(req, collection, activeEnv)
+      setResponses((r) => ({ ...r, [req.id]: result.response }))
 
-      if (req.testScript?.trim() && !res.error) {
-        const envVars: Record<string, string> = {}
-        for (const v of activeEnv?.variables ?? []) {
-          if (v.enabled) envVars[v.key] = v.value
-        }
-        const outcome = runTestScript(req.testScript, res, envVars)
-        setTestOutcomes((t) => ({ ...t, [req.id]: outcome }))
-        if (activeEnv && Object.keys(outcome.envUpdates).length > 0) {
-          const merged = { ...activeEnv }
-          for (const [k, v] of Object.entries(outcome.envUpdates)) {
-            const existing = merged.variables.find((kv) => kv.key === k)
-            merged.variables = existing
-              ? merged.variables.map((kv) => (kv.key === k ? { ...kv, value: v } : kv))
-              : [...merged.variables, { key: k, value: v, enabled: true }]
+      if (result.tests.length > 0 || result.scriptError || result.consoleLines.length > 0) {
+        setTestOutcomes((t) => ({
+          ...t,
+          [req.id]: {
+            tests: result.tests,
+            envUpdates: result.envUpdates,
+            consoleLines: result.consoleLines,
+            scriptError: result.scriptError
           }
-          persistEnvironments(environments.map((e) => (e.id === merged.id ? merged : e)))
+        }))
+      }
+
+      if (activeEnv && Object.keys(result.envUpdates).length > 0) {
+        const merged = { ...activeEnv }
+        for (const [k, v] of Object.entries(result.envUpdates)) {
+          const existing = merged.variables.find((kv) => kv.key === k)
+          merged.variables = existing
+            ? merged.variables.map((kv) => (kv.key === k ? { ...kv, value: v } : kv))
+            : [...merged.variables, { key: k, value: v, enabled: true }]
         }
+        persistEnvironments(environments.map((e) => (e.id === merged.id ? merged : e)))
       }
 
       const entry: HistoryEntry = {
         id: uid(),
         timestamp: Date.now(),
         request: structuredClone(req),
-        status: res.status,
-        timeMs: res.timeMs
+        status: result.response.status,
+        timeMs: result.response.timeMs
       }
       setHistory((h) => [entry, ...h].slice(0, 200))
       void window.api.appendHistory(entry)
@@ -246,6 +261,7 @@ export default function App(): React.JSX.Element {
               onCollectionsChange={persistCollections}
               onOpenRequest={openRequest}
               onRunCollection={setRunningCollection}
+              onEditCollection={(c) => setEditingCollectionId(c.id)}
             />
             <div className="main">
               <div className="req-tabs">
@@ -317,6 +333,24 @@ export default function App(): React.JSX.Element {
           onClose={() => setRunningCollection(null)}
         />
       )}
+      {editingCollectionId &&
+        (() => {
+          const col = collections.find((c) => c.id === editingCollectionId)
+          if (!col) return null
+          return (
+            <CollectionEditor
+              collection={col}
+              onChange={(updated) =>
+                persistCollections(collections.map((c) => (c.id === updated.id ? updated : c)))
+              }
+              onRun={(c) => {
+                setEditingCollectionId(null)
+                setRunningCollection(c)
+              }}
+              onClose={() => setEditingCollectionId(null)}
+            />
+          )
+        })()}
     </div>
   )
 }
