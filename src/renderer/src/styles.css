@@ -30,7 +30,11 @@ body,
 body {
   background: var(--bg);
   color: var(--text);
-  font: 13px/1.45 -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font:
+    13px/1.45 -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    sans-serif;
 }
 
 .app {
@@ -266,12 +270,25 @@ button.icon:hover {
   flex-shrink: 0;
 }
 
-.m-GET { color: var(--green); }
-.m-POST { color: var(--yellow); }
-.m-PUT { color: var(--blue); }
-.m-PATCH { color: var(--blue); }
-.m-DELETE { color: var(--red); }
-.m-HEAD, .m-OPTIONS { color: var(--text-dim); }
+.m-GET {
+  color: var(--green);
+}
+.m-POST {
+  color: var(--yellow);
+}
+.m-PUT {
+  color: var(--blue);
+}
+.m-PATCH {
+  color: var(--blue);
+}
+.m-DELETE {
+  color: var(--red);
+}
+.m-HEAD,
+.m-OPTIONS {
+  color: var(--text-dim);
+}
 
 .hist-meta {
   color: var(--text-dim);
@@ -392,11 +409,26 @@ button.icon:hover {
   align-items: center;
 }
 
-.status-2xx { color: var(--green); font-weight: 700; }
-.status-3xx { color: var(--yellow); font-weight: 700; }
-.status-4xx { color: var(--orange); font-weight: 700; }
-.status-5xx { color: var(--red); font-weight: 700; }
-.status-err { color: var(--red); font-weight: 700; }
+.status-2xx {
+  color: var(--green);
+  font-weight: 700;
+}
+.status-3xx {
+  color: var(--yellow);
+  font-weight: 700;
+}
+.status-4xx {
+  color: var(--orange);
+  font-weight: 700;
+}
+.status-5xx {
+  color: var(--red);
+  font-weight: 700;
+}
+.status-err {
+  color: var(--red);
+  font-weight: 700;
+}
 
 .resp-body {
   flex: 1;

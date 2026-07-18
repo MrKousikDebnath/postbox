@@ -8,21 +8,56 @@
     "dev": "electron-vite dev",
     "build": "electron-vite build",
     "start": "electron-vite preview",
-    "typecheck": "tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json"
+    "typecheck": "tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "dist": "electron-vite build && electron-builder --publish never"
+  },
+  "build": {
+    "appId": "com.kousikdebnath.postbox",
+    "productName": "PostBox",
+    "files": [
+      "out/**",
+      "package.json"
+    ],
+    "directories": {
+      "output": "release"
+    },
+    "mac": {
+      "target": [
+        "dmg",
+        "zip"
+      ],
+      "category": "public.app-category.developer-tools"
+    },
+    "publish": {
+      "provider": "github",
+      "owner": "MrKousikDebnath",
+      "repo": "postbox"
+    }
   },
   "dependencies": {
     "chrome-remote-interface": "^0.33.2"
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
     "@types/chrome-remote-interface": "^0.31.14",
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.0",
     "@vitejs/plugin-react": "^4.3.1",
     "electron": "^31.3.0",
+    "electron-builder": "^26.15.3",
     "electron-vite": "^2.3.0",
+    "eslint": "^10.7.0",
+    "prettier": "^3.9.5",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "typescript": "^5.5.4",
-    "vite": "^5.4.0"
+    "typescript-eslint": "^8.64.0",
+    "vite": "^5.4.0",
+    "vitest": "^4.1.10"
   }
 }

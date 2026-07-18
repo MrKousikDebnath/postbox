@@ -66,9 +66,7 @@ function registerIpc(): void {
     history.unshift(entry)
     await storage.save('history.json', history.slice(0, MAX_HISTORY))
   })
-  ipcMain.handle('store:load-sessions', () =>
-    storage.load<RecordingSession[]>('sessions.json', [])
-  )
+  ipcMain.handle('store:load-sessions', () => storage.load<RecordingSession[]>('sessions.json', []))
   ipcMain.handle('store:save-sessions', (_e, data: RecordingSession[]) =>
     storage.save('sessions.json', data)
   )

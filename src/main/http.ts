@@ -47,7 +47,9 @@ export async function executeRequest(req: ExecutableRequest): Promise<ApiRespons
       err instanceof Error && err.name === 'AbortError'
         ? `Request timed out after ${TIMEOUT_MS / 1000}s`
         : err instanceof Error
-          ? (err.cause instanceof Error ? `${err.message}: ${err.cause.message}` : err.message)
+          ? err.cause instanceof Error
+            ? `${err.message}: ${err.cause.message}`
+            : err.message
           : String(err)
     return {
       status: 0,

@@ -95,9 +95,7 @@ export default function App(): React.JSX.Element {
         await textPrompt('No collections yet. Name a new collection to save into:')
       )?.trim()
       if (!name) return
-      persistCollections([
-        { id: uid(), name, folders: [], requests: [structuredClone(request)] }
-      ])
+      persistCollections([{ id: uid(), name, folders: [], requests: [structuredClone(request)] }])
       return
     }
     const names = collections.map((c, i) => `${i + 1}. ${c.name}`).join('\n')

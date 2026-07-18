@@ -11,12 +11,15 @@ npm run dev      # launches the app with hot reload
 ## Before opening a PR
 
 ```bash
+npm run lint
+npm run format:check
+npm test
 npm run typecheck
 npm run build
 node scripts/cdp-smoke-test.mjs   # if you touched the recorder (needs Chrome installed)
 ```
 
-All three must pass. CI runs typecheck + build on every PR.
+All must pass. CI runs lint + format + tests + typecheck + build on every PR.
 
 ## Project layout
 

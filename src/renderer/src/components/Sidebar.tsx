@@ -70,17 +70,27 @@ export default function Sidebar({
           </div>
           <div className="sidebar-body">
             {collections.length === 0 && (
-              <div className="empty-note">No collections yet. Create one, then save requests into it.</div>
+              <div className="empty-note">
+                No collections yet. Create one, then save requests into it.
+              </div>
             )}
             {collections.map((col) => (
               <div className="tree-group" key={col.id}>
                 <div className="tree-item">
                   <span className="name">📁 {col.name}</span>
                   <span className="actions">
-                    <button className="icon" title="Rename" onClick={() => void renameCollection(col.id)}>
+                    <button
+                      className="icon"
+                      title="Rename"
+                      onClick={() => void renameCollection(col.id)}
+                    >
                       ✎
                     </button>
-                    <button className="icon" title="Delete" onClick={() => deleteCollection(col.id)}>
+                    <button
+                      className="icon"
+                      title="Delete"
+                      onClick={() => deleteCollection(col.id)}
+                    >
                       ✕
                     </button>
                   </span>

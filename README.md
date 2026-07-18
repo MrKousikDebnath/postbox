@@ -15,14 +15,14 @@ call converts to an editable request with one click.
 
 ## Features
 
-| | API Client | Network Recorder |
-|---|---|---|
-| ✅ | Method / URL / params / headers / body builder | Attach to any Chrome tab (CDP, port 9222) |
-| ✅ | Bearer, Basic, API-key auth helpers | One-click "Launch Chrome (debug mode)" |
-| ✅ | Environments with `{{variable}}` substitution | Reload & Record — captures every request |
-| ✅ | Collections + request history (JSON on disk) | Headers, bodies, status, timing, size |
-| ✅ | No CORS limits (requests run in main process) | Filters: XHR / DOC / JS / ALL + URL search |
-| ✅ | Pretty-printed JSON responses | "Open in API Client →" on any recorded call |
+|     | API Client                                     | Network Recorder                            |
+| --- | ---------------------------------------------- | ------------------------------------------- |
+| ✅  | Method / URL / params / headers / body builder | Attach to any Chrome tab (CDP, port 9222)   |
+| ✅  | Bearer, Basic, API-key auth helpers            | One-click "Launch Chrome (debug mode)"      |
+| ✅  | Environments with `{{variable}}` substitution  | Reload & Record — captures every request    |
+| ✅  | Collections + request history (JSON on disk)   | Headers, bodies, status, timing, size       |
+| ✅  | No CORS limits (requests run in main process)  | Filters: XHR / DOC / JS / ALL + URL search  |
+| ✅  | Pretty-printed JSON responses                  | "Open in API Client →" on any recorded call |
 
 ## Quick start
 
@@ -72,17 +72,23 @@ Details in [CLAUDE.md](CLAUDE.md) — which also gives AI coding agents full pro
 
 ```bash
 npm run dev         # app with hot reload
+npm test            # unit tests (vitest)
+npm run lint        # eslint
 npm run typecheck   # tsc over main + renderer
 npm run build       # production bundles
+npm run dist        # package a distributable app (dmg/zip) into release/
 node scripts/cdp-smoke-test.mjs   # end-to-end CDP capture test (headless Chrome)
 ```
+
+Releases: pushing a tag like `v0.2.0` triggers the Release workflow, which builds
+the macOS app and attaches it to a GitHub Release automatically.
 
 See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Limits (v1)
 
 - Response bodies capped at 10 MB (client and recorder)
-- Recorder captures from attach time — use *Reload & Record* for a full page load
+- Recorder captures from attach time — use _Reload & Record_ for a full page load
 - WebSocket frames not captured yet
 - Saved data (may include tokens) lives in `data/` — gitignored, keep it that way
 

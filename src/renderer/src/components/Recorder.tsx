@@ -206,7 +206,15 @@ export default function Recorder({ onSendToClient, onSaveSession }: Props): Reac
         )}
         {attachedTo && (
           <>
-            <span className="mono" style={{ maxWidth: 340, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            <span
+              className="mono"
+              style={{
+                maxWidth: 340,
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap'
+              }}
+            >
               {attachedTo.title || attachedTo.url}
             </span>
             <button className="btn primary" onClick={reload}>

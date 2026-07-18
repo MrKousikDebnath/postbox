@@ -53,7 +53,8 @@ export function buildExecutable(
       headers['Authorization'] = `Bearer ${sub(req.auth.token)}`
       break
     case 'basic':
-      headers['Authorization'] = `Basic ${btoa(`${sub(req.auth.username)}:${sub(req.auth.password)}`)}`
+      headers['Authorization'] =
+        `Basic ${btoa(`${sub(req.auth.username)}:${sub(req.auth.password)}`)}`
       break
     case 'apikey':
       if (req.auth.headerName) headers[sub(req.auth.headerName)] = sub(req.auth.value)
