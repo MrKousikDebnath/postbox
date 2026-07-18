@@ -5,6 +5,7 @@
 /* ===== Themes ===== default (:root) is Aurora Glass ===== */
 :root,
 [data-theme='aurora'] {
+  --menu-bg: rgba(26, 16, 48, 0.94);
   --accent: #ff6c37;
   --accent-2: #ff8f5e;
   --glass: rgba(255, 255, 255, 0.07);
@@ -36,6 +37,7 @@
 }
 
 [data-theme='frost'] {
+  --menu-bg: rgba(255, 255, 255, 0.96);
   --accent: #e55420;
   --accent-2: #ff6c37;
   --glass: rgba(255, 255, 255, 0.62);
@@ -65,6 +67,7 @@
 }
 
 [data-theme='carbon'] {
+  --menu-bg: rgba(18, 19, 22, 0.96);
   --accent: #ff6c37;
   --accent-2: #ff8f5e;
   --glass: rgba(255, 255, 255, 0.04);
@@ -80,6 +83,7 @@
 }
 
 [data-theme='synthwave'] {
+  --menu-bg: rgba(38, 12, 64, 0.95);
   --accent: #ff2e97;
   --accent-2: #ff6ec7;
   --glass: rgba(255, 255, 255, 0.06);
@@ -100,6 +104,7 @@
 }
 
 [data-theme='matrix'] {
+  --menu-bg: rgba(3, 14, 9, 0.95);
   --accent: #3ad16b;
   --accent-2: #6ff29a;
   --glass: rgba(58, 209, 107, 0.05);
@@ -122,6 +127,7 @@
 }
 
 [data-theme='tron'] {
+  --menu-bg: rgba(5, 22, 30, 0.95);
   --accent: #22d3ee;
   --accent-2: #67e8f9;
   --glass: rgba(34, 211, 238, 0.05);
@@ -142,6 +148,7 @@
 }
 
 [data-theme='nebula'] {
+  --menu-bg: rgba(27, 11, 46, 0.95);
   --accent: #b06cff;
   --accent-2: #cf9bff;
   --glass: rgba(176, 108, 255, 0.06);
@@ -191,6 +198,8 @@ body {
   backdrop-filter: blur(18px);
   -webkit-backdrop-filter: blur(18px);
   border-bottom: 1px solid var(--glass-border);
+  position: relative;
+  z-index: 100;
 }
 
 .logo {
@@ -1133,8 +1142,8 @@ input[type='checkbox'] {
   position: absolute;
   top: calc(100% + 6px);
   right: 0;
-  z-index: 20;
-  background: var(--glass-strong);
+  z-index: 200;
+  background: var(--menu-bg, rgba(26, 16, 48, 0.94));
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
   border: 1px solid var(--glass-border);
