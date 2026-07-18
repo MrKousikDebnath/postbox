@@ -13,8 +13,10 @@ import Recorder from './components/Recorder'
 import EnvironmentManager from './components/EnvironmentManager'
 import RunnerModal from './components/RunnerModal'
 import PromptHost, { textPrompt } from './components/PromptHost'
+import ThemePicker from './components/ThemePicker'
 import { buildExecutable, emptyRequest, uid } from './util'
 import { runTestScript, type ScriptOutcome } from './lib/scripts'
+import { loadTheme } from './themes'
 
 type View = 'client' | 'recorder'
 
@@ -26,6 +28,7 @@ export default function App(): React.JSX.Element {
   const [activeEnvId, setActiveEnvId] = useState<string>('')
   const [showEnvManager, setShowEnvManager] = useState(false)
   const [runningCollection, setRunningCollection] = useState<Collection | null>(null)
+  const [theme, setTheme] = useState<string>(() => loadTheme())
 
   const [tabs, setTabs] = useState<ApiRequest[]>(() => [emptyRequest()])
   const [activeTabId, setActiveTabId] = useState<string>(() => tabs[0].id)
@@ -230,6 +233,7 @@ export default function App(): React.JSX.Element {
         <button className="btn small" onClick={() => setShowEnvManager(true)}>
           Manage
         </button>
+        <ThemePicker current={theme} onChange={setTheme} />
       </div>
 
       <div className="body">
