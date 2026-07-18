@@ -41,11 +41,11 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.112.3",
-    "chrome-remote-interface": "^0.33.2"
+    "chrome-remote-interface": "^0.34.0"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
-    "@types/chrome-remote-interface": "^0.31.14",
+    "@types/chrome-remote-interface": "^0.34.0",
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.0",
     "@vitejs/plugin-react": "^4.3.1",
