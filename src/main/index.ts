@@ -79,6 +79,7 @@ function registerIpc(): void {
   ipcMain.handle('cdp:list-targets', () => cdp.listTargets())
   ipcMain.handle('cdp:attach', (e, targetId: string) => cdp.attach(targetId, e.sender))
   ipcMain.handle('cdp:detach', () => cdp.detach())
+  ipcMain.handle('cdp:attached-target', () => cdp.getAttachedTarget())
   ipcMain.handle('cdp:reload-page', () => cdp.reloadPage())
   ipcMain.handle('cdp:get-records', () => cdp.getRecords())
   ipcMain.handle('cdp:clear-records', () => cdp.clearRecords())

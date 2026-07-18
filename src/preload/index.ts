@@ -17,6 +17,7 @@ const api = {
   cdpListTargets: () => ipcRenderer.invoke('cdp:list-targets'),
   cdpAttach: (targetId: string) => ipcRenderer.invoke('cdp:attach', targetId),
   cdpDetach: () => ipcRenderer.invoke('cdp:detach'),
+  cdpAttachedTarget: () => ipcRenderer.invoke('cdp:attached-target'),
   cdpReloadPage: () => ipcRenderer.invoke('cdp:reload-page'),
   cdpGetRecords: () => ipcRenderer.invoke('cdp:get-records'),
   cdpClearRecords: () => ipcRenderer.invoke('cdp:clear-records'),

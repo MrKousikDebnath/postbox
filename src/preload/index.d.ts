@@ -30,6 +30,7 @@ export interface PostboxApi {
   cdpListTargets(): Promise<CdpTarget[]>
   cdpAttach(targetId: string): Promise<void>
   cdpDetach(): Promise<void>
+  cdpAttachedTarget(): Promise<string | null>
   cdpReloadPage(): Promise<void>
   cdpGetRecords(): Promise<RecordedRequest[]>
   cdpClearRecords(): Promise<void>

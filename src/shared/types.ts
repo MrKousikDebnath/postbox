@@ -21,6 +21,7 @@ export interface ApiRequest {
   body: string
   formBody: KeyValue[]
   auth: AuthConfig
+  testScript?: string
 }
 
 export interface ApiResponse {

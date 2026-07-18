@@ -55,6 +55,23 @@ export default function Recorder({ onSendToClient }: Props): React.JSX.Element {
   useEffect(() => {
     void refreshAvailability()
     void window.api.loadSessions().then(setSessions)
+    // Restore live state after a view switch: the main process stays attached
+    // and keeps capturing while this component is unmounted.
+    void (async () => {
+      const attachedId = await window.api.cdpAttachedTarget()
+      if (!attachedId) return
+      const recs = await window.api.cdpGetRecords()
+      setRecords(new Map(recs.map((r) => [r.requestId, r])))
+      let target: CdpTarget | undefined
+      try {
+        target = (await window.api.cdpListTargets()).find((t) => t.id === attachedId)
+      } catch {
+        // Chrome may be busy; fall back to a placeholder
+      }
+      const restored = target ?? { id: attachedId, title: 'Attached tab', url: '', type: 'page' }
+      setAttachedTo(restored)
+      attachedRef.current = restored
+    })()
     const offUpdate = window.api.onCdpRequestUpdate((rec) => {
       setRecords((prev) => {
         const next = new Map(prev)

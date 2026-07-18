@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import type { ApiRequest, AuthConfig } from '../../../shared/types'
 import KeyValueEditor from './KeyValueEditor'
+import { toCurl, toFetch, toAxios } from '../lib/curl'
 
 const METHODS = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS']
 
@@ -12,7 +13,8 @@ interface Props {
   onSave: () => void
 }
 
-type Tab = 'params' | 'headers' | 'body' | 'auth'
+type Tab = 'params' | 'headers' | 'body' | 'auth' | 'tests'
+type Lang = 'curl' | 'fetch' | 'axios'
 
 export default function RequestBuilder({
   request,
@@ -22,9 +24,21 @@ export default function RequestBuilder({
   onSave
 }: Props): React.JSX.Element {
   const [tab, setTab] = useState<Tab>('params')
+  const [showCode, setShowCode] = useState(false)
+  const [lang, setLang] = useState<Lang>('curl')
+  const [copied, setCopied] = useState(false)
 
   const patch = (p: Partial<ApiRequest>): void => onChange({ ...request, ...p })
   const patchAuth = (a: AuthConfig): void => patch({ auth: a })
+
+  const snippet =
+    lang === 'curl' ? toCurl(request) : lang === 'fetch' ? toFetch(request) : toAxios(request)
+
+  const copySnippet = async (): Promise<void> => {
+    await navigator.clipboard.writeText(snippet)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 1200)
+  }
 
   return (
     <div className="req-pane">
@@ -35,6 +49,9 @@ export default function RequestBuilder({
           onChange={(e) => patch({ name: e.target.value })}
           placeholder="Request name"
         />
+        <button className="btn" onClick={() => setShowCode(true)} title="Code snippets">
+          {'</>'} Code
+        </button>
         <button className="btn" onClick={onSave}>
           Save
         </button>
@@ -42,7 +59,7 @@ export default function RequestBuilder({
 
       <div className="url-row">
         <select
-          className="method"
+          className={`method m-${request.method}`}
           value={request.method}
           onChange={(e) => patch({ method: e.target.value })}
         >
@@ -71,7 +88,8 @@ export default function RequestBuilder({
             ['params', `Params${count(request.params)}`],
             ['headers', `Headers${count(request.headers)}`],
             ['body', 'Body'],
-            ['auth', 'Auth']
+            ['auth', 'Auth'],
+            ['tests', request.testScript?.trim() ? 'Tests ●' : 'Tests']
           ] as [Tab, string][]
         ).map(([t, label]) => (
           <button key={t} className={tab === t ? 'active' : ''} onClick={() => setTab(t)}>
@@ -80,7 +98,7 @@ export default function RequestBuilder({
         ))}
       </div>
 
-      <div className="tab-content">
+      <div className="tab-content fade-fast" key={tab}>
         {tab === 'params' && (
           <KeyValueEditor items={request.params} onChange={(params) => patch({ params })} />
         )}
@@ -211,7 +229,52 @@ export default function RequestBuilder({
             )}
           </div>
         )}
+        {tab === 'tests' && (
+          <div>
+            <p className="dim" style={{ marginTop: 0 }}>
+              Postman-style test script — runs after the response arrives. Available:{' '}
+              <span className="mono">
+                pm.test, pm.expect, pm.response.code/json()/text()/headers.get(),
+                pm.environment.get/set
+              </span>
+            </p>
+            <textarea
+              rows={12}
+              style={{ width: '100%' }}
+              value={request.testScript ?? ''}
+              placeholder={`pm.test('status is 200', () => {\n  pm.expect(pm.response.code).to.equal(200)\n})\n\npm.test('has userId', () => {\n  pm.expect(pm.response.json()).to.have.property('userId')\n})`}
+              onChange={(e) => patch({ testScript: e.target.value })}
+            />
+          </div>
+        )}
       </div>
+
+      {showCode && (
+        <div className="modal-overlay" onClick={() => setShowCode(false)}>
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
+            <h3>Code snippet</h3>
+            <div className="row">
+              {(['curl', 'fetch', 'axios'] as Lang[]).map((l) => (
+                <button
+                  key={l}
+                  className={`chip ${lang === l ? 'active' : ''}`}
+                  onClick={() => setLang(l)}
+                >
+                  {l}
+                </button>
+              ))}
+              <span className="spacer" />
+              <button className="btn small" onClick={() => void copySnippet()}>
+                {copied ? '✓ Copied' : 'Copy'}
+              </button>
+              <button className="btn small" onClick={() => setShowCode(false)}>
+                Close
+              </button>
+            </div>
+            <pre className="code-snippet">{snippet}</pre>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
