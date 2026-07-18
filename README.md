@@ -26,14 +26,15 @@ call converts to an editable request with one click.
 
 ## Features
 
-|     | API Client                                     | Network Recorder                            |
-| --- | ---------------------------------------------- | ------------------------------------------- |
-| ✅  | Method / URL / params / headers / body builder | Attach to any Chrome tab (CDP, port 9222)   |
-| ✅  | Bearer, Basic, API-key auth helpers            | One-click "Launch Chrome (debug mode)"      |
-| ✅  | Environments with `{{variable}}` substitution  | Reload & Record — captures every request    |
-| ✅  | Collections + request history (JSON on disk)   | Headers, bodies, status, timing, size       |
-| ✅  | No CORS limits (requests run in main process)  | Filters: XHR / DOC / JS / ALL + URL search  |
-| ✅  | Pretty-printed JSON responses                  | "Open in API Client →" on any recorded call |
+|     | API Client                                     | Network Recorder                                    |
+| --- | ---------------------------------------------- | --------------------------------------------------- |
+| ✅  | Method / URL / params / headers / body builder | Attach to any Chrome tab (CDP, port 9222)           |
+| ✅  | Bearer, Basic, API-key auth helpers            | One-click "Launch Chrome (debug mode)"              |
+| ✅  | Environments with `{{variable}}` substitution  | Reload & Record — captures every request            |
+| ✅  | Collections + request history (JSON on disk)   | Headers, bodies, status, timing, size               |
+| ✅  | No CORS limits (requests run in main process)  | Filters: XHR / DOC / JS / ALL + URL search          |
+| ✅  | Pretty-printed JSON responses                  | "Open in API Client →" on any recorded call         |
+| ✅  | cURL / Postman import, code snippets           | 🤖 **Ask AI** — question the traffic, cited answers |
 
 ## Quick start
 
@@ -57,6 +58,19 @@ npm run dev
 4. Hit **⟳ Reload & Record**. Every request the page makes streams into the table live.
 5. Click a row for headers/body; **Open in API Client →** to replay/edit it, or
    **Save Session** to persist the whole recording.
+
+## Ask AI (RAG over recorded traffic)
+
+Click **🤖 Ask AI** in the recorder toolbar (live capture or a saved session) and ask
+questions in natural language — _"where does `deviceUserAgentId` come from?"_, _"which
+requests set cookies?"_, _"why did the search call fail?"_. PostBox retrieves the most
+relevant recorded requests (ranking by URL/header/body matches, with a provenance boost
+for requests whose **response** contains the value you asked about), sends them to Claude,
+and returns an answer with inline `[n]` citations linking back to the exact requests.
+
+Requires an Anthropic API key (from [console.anthropic.com](https://console.anthropic.com)),
+entered once in the panel and stored locally in `data/settings.json` (gitignored — it never
+leaves your machine except to call the API). Uses `claude-opus-4-8`.
 
 ## Architecture
 
@@ -105,11 +119,13 @@ See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Roadmap
 
-- [ ] Pre-request / test scripts
+- [x] Test scripts (`pm.test` / `pm.expect`) + collection runner
+- [x] Postman collection import/export, cURL import, code snippets
+- [x] AI Q&A over recorded traffic
 - [ ] Mock server (replay recorded sessions)
-- [ ] OpenAPI 3.0 + Postman collection import/export
+- [ ] OpenAPI 3.0 import/export
 - [ ] WebSocket frame capture
-- [ ] cURL import/export
+- [ ] Embeddings-based retrieval for very large recordings
 
 ## License
 

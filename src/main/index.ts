@@ -3,6 +3,7 @@ import path from 'path'
 import { executeRequest, type ExecutableRequest } from './http'
 import { storage } from './storage'
 import * as cdp from './cdp'
+import * as ai from './ai'
 import { printBanner } from './banner'
 import type { Collection, Environment, HistoryEntry, RecordingSession } from '../shared/types'
 
@@ -83,6 +84,19 @@ function registerIpc(): void {
   ipcMain.handle('cdp:reload-page', () => cdp.reloadPage())
   ipcMain.handle('cdp:get-records', () => cdp.getRecords())
   ipcMain.handle('cdp:clear-records', () => cdp.clearRecords())
+  // ---- AI (RAG over recorded traffic) ----
+  ipcMain.handle('ai:set-key', (_e, key: string) => ai.setApiKey(key))
+  ipcMain.handle('ai:has-key', () => ai.hasApiKey())
+  ipcMain.handle(
+    'ai:ask',
+    (
+      _e,
+      question: string,
+      sessionId: string | null,
+      history: { question: string; answer: string }[]
+    ) => ai.ask(question, sessionId, history)
+  )
+
   ipcMain.handle('cdp:get-body', async (_e, requestId: string) => {
     try {
       return await cdp.getResponseBody(requestId)

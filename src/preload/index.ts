@@ -23,6 +23,11 @@ const api = {
   cdpClearRecords: () => ipcRenderer.invoke('cdp:clear-records'),
   cdpGetBody: (requestId: string) => ipcRenderer.invoke('cdp:get-body', requestId),
 
+  aiSetKey: (key: string) => ipcRenderer.invoke('ai:set-key', key),
+  aiHasKey: () => ipcRenderer.invoke('ai:has-key'),
+  aiAsk: (question: string, sessionId: string | null, history: unknown[]) =>
+    ipcRenderer.invoke('ai:ask', question, sessionId, history),
+
   onCdpRequestUpdate: (cb: (rec: unknown) => void) => {
     const listener = (_e: unknown, rec: unknown): void => cb(rec)
     ipcRenderer.on('cdp:request-update', listener)

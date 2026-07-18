@@ -36,6 +36,18 @@ export interface PostboxApi {
   cdpClearRecords(): Promise<void>
   cdpGetBody(requestId: string): Promise<string>
 
+  aiSetKey(key: string): Promise<void>
+  aiHasKey(): Promise<boolean>
+  aiAsk(
+    question: string,
+    sessionId: string | null,
+    history: { question: string; answer: string }[]
+  ): Promise<{
+    answer: string
+    sources: { index: number; method: string; url: string; status?: number }[]
+    error?: string
+  }>
+
   onCdpRequestUpdate(cb: (rec: RecordedRequest) => void): () => void
   onCdpDetached(cb: () => void): () => void
 }

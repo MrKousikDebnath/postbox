@@ -35,6 +35,10 @@ Electron three-process model; the split matters for every change:
     via `webContents.send('cdp:request-update', …)`.
   - `storage.ts` — JSON persistence in `data/` (gitignored), atomic writes via
     tmp-file + rename, serialized through a write queue.
+  - `ai.ts` — RAG over recorded traffic: builds a doc corpus from the live/saved
+    capture, keyword+provenance retrieval (values in a request's _response_ score
+    high as the origin), then calls Claude (`claude-opus-4-8`) with cited context.
+    API key lives in `data/settings.json` (gitignored). Uses `@anthropic-ai/sdk`.
 - `src/preload/` — `contextBridge` exposes `window.api`; every renderer↔main
   call goes through here. `index.d.ts` types the whole surface — update it
   whenever an IPC channel is added.

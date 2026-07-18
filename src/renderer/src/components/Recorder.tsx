@@ -3,6 +3,7 @@ import type { CdpTarget, RecordedRequest, RecordingSession } from '../../../shar
 import { formatBytes, recordedToApiRequest, statusClass, tryPrettyJson, uid } from '../util'
 import type { ApiRequest } from '../../../shared/types'
 import { textPrompt } from './PromptHost'
+import AskAI from './AskAI'
 
 interface Props {
   onSendToClient: (req: ApiRequest) => void
@@ -38,6 +39,7 @@ export default function Recorder({ onSendToClient }: Props): React.JSX.Element {
   const [search, setSearch] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [showAI, setShowAI] = useState(false)
   const attachedRef = useRef<CdpTarget | null>(null)
 
   const refreshAvailability = useCallback(async (): Promise<void> => {
@@ -337,6 +339,14 @@ export default function Recorder({ onSendToClient }: Props): React.JSX.Element {
         )}
 
         <span className="spacer" />
+        <button
+          className={`btn small ${showAI ? 'primary' : ''}`}
+          disabled={source.length === 0}
+          onClick={() => setShowAI((v) => !v)}
+          title="Ask AI about the recorded traffic"
+        >
+          🤖 Ask AI
+        </button>
         <div className="rec-filter">
           {(['xhr', 'doc', 'js', 'other', 'all'] as Filter[]).map((f) => (
             <button
@@ -442,6 +452,14 @@ export default function Recorder({ onSendToClient }: Props): React.JSX.Element {
                   : tryPrettyJson(body)}
             </pre>
           </div>
+        )}
+
+        {showAI && (
+          <AskAI
+            sessionId={viewing?.id ?? null}
+            requestCount={source.length}
+            onClose={() => setShowAI(false)}
+          />
         )}
       </div>
     </div>
