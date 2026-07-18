@@ -1,66 +1,99 @@
-# PostBox
+# 📮 PostBox
 
-API client (Postman-style) + Chrome network recorder in one Electron app.
+[![CI](https://github.com/MrKousikDebnath/postbox/actions/workflows/ci.yml/badge.svg)](https://github.com/MrKousikDebnath/postbox/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+![Electron](https://img.shields.io/badge/Electron-31-47848F?logo=electron&logoColor=white)
+![React](https://img.shields.io/badge/React-18-61DAFB?logo=react&logoColor=black)
+![TypeScript](https://img.shields.io/badge/TypeScript-5.5-3178C6?logo=typescript&logoColor=white)
 
-## Requirements
+**API client + Chrome network recorder in one desktop app.**
 
-- Node 20 (`nvm use` — pinned in `.nvmrc`). Do **not** run with the system default Node 10.
-
-## Run
-
-```bash
-nvm use
-npm install        # first time only
-npm run dev        # launches the app
-```
-
-Other commands:
-
-```bash
-npm run build      # production bundles into out/
-npm run typecheck  # tsc over main + renderer
-node scripts/cdp-smoke-test.mjs   # verifies CDP capture against headless Chrome
-```
+Build and send API requests like Postman — and attach directly to Chrome via the
+DevTools Protocol so that when you refresh a page, every upstream and downstream
+service call is recorded with full headers, bodies, status and timing. Any recorded
+call converts to an editable request with one click.
 
 ## Features
 
-### API Client
-- Method / URL / query params / headers / body (JSON, raw, form-urlencoded)
-- Auth helpers: Bearer, Basic, API key header
-- Environments with `{{variable}}` substitution (topbar selector → Manage)
-- Collections (save/rename/delete) and request history — persisted as JSON under `data/`
-- Requests execute in the Electron main process: no CORS restrictions, full header control
+| | API Client | Network Recorder |
+|---|---|---|
+| ✅ | Method / URL / params / headers / body builder | Attach to any Chrome tab (CDP, port 9222) |
+| ✅ | Bearer, Basic, API-key auth helpers | One-click "Launch Chrome (debug mode)" |
+| ✅ | Environments with `{{variable}}` substitution | Reload & Record — captures every request |
+| ✅ | Collections + request history (JSON on disk) | Headers, bodies, status, timing, size |
+| ✅ | No CORS limits (requests run in main process) | Filters: XHR / DOC / JS / ALL + URL search |
+| ✅ | Pretty-printed JSON responses | "Open in API Client →" on any recorded call |
 
-### Network Recorder
+## Quick start
+
+Requires **Node 20** ([nvm](https://github.com/nvm-sh/nvm) recommended) and Google Chrome.
+
+```bash
+git clone https://github.com/MrKousikDebnath/postbox.git
+cd postbox
+nvm use
+npm install
+npm run dev
+```
+
+## Using the recorder
+
 1. Switch to the **Network Recorder** tab.
-2. If Chrome isn't running with a debug port, click **Launch Chrome (debug mode)** —
-   this starts a separate Chrome instance (own profile at `~/.postbox-chrome-profile`)
-   with `--remote-debugging-port=9222`. Alternatively start your own:
-   `open -na "Google Chrome" --args --remote-debugging-port=9222 --user-data-dir=$HOME/.postbox-chrome-profile`
-3. Pick a tab and attach.
-4. **⟳ Reload & Record** reloads the page and captures every request: upstream calls,
-   XHR/fetch, documents, scripts — with headers, bodies, status, timing, size.
-5. Click any row for details; **Open in API Client →** turns a recorded call into an
-   editable request. **Save Session** persists the full recording to `data/sessions.json`.
-
-Filters: XHR (fetch/XHR), DOC, JS, OTHER, ALL + URL text search.
+2. Click **Launch Chrome (debug mode)** — starts a separate Chrome instance
+   (own profile, doesn't touch your normal browser) with
+   `--remote-debugging-port=9222`.
+3. Open any site in that Chrome window, then in PostBox: **Refresh tabs** → pick the tab → attach.
+4. Hit **⟳ Reload & Record**. Every request the page makes streams into the table live.
+5. Click a row for headers/body; **Open in API Client →** to replay/edit it, or
+   **Save Session** to persist the whole recording.
 
 ## Architecture
 
 ```
-src/main/      Electron main process
-  index.ts     window + IPC registration
-  http.ts      request executor (fetch, 60s timeout, 10MB body cap)
-  cdp.ts       Chrome DevTools Protocol bridge (chrome-remote-interface)
-  storage.ts   JSON persistence (data/*.json, atomic writes)
-src/preload/   contextBridge API (window.api)
-src/renderer/  React UI (client + recorder views)
-src/shared/    types shared across processes
+┌──────────────────────────────────────────────┐
+│                 Electron app                 │
+│  ┌──────────────┐  IPC   ┌────────────────┐  │
+│  │   Renderer   │◄──────►│  Main process  │  │
+│  │  React UI    │preload │  http.ts  fetch│──┼──► any API
+│  │  client +    │        │  cdp.ts   CDP  │──┼──► Chrome :9222
+│  │  recorder    │        │  storage  JSON │  │
+│  └──────────────┘        └────────────────┘  │
+└──────────────────────────────────────────────┘
 ```
 
-## Notes / limits (v1)
+- `src/main/` — request executor, CDP bridge (`chrome-remote-interface`), JSON storage
+- `src/preload/` — typed `window.api` context bridge
+- `src/renderer/` — React UI
+- `src/shared/` — types shared across all three
 
-- Response bodies capped at 10 MB in both client and recorder.
-- Recorder must be attached *before* the traffic happens; use Reload & Record.
-- WebSocket frames are not captured yet (connections show as requests only).
-- `data/` contains your saved requests/tokens — do not commit it if this becomes a repo.
+Details in [CLAUDE.md](CLAUDE.md) — which also gives AI coding agents full project context.
+
+## Development
+
+```bash
+npm run dev         # app with hot reload
+npm run typecheck   # tsc over main + renderer
+npm run build       # production bundles
+node scripts/cdp-smoke-test.mjs   # end-to-end CDP capture test (headless Chrome)
+```
+
+See [CONTRIBUTING.md](CONTRIBUTING.md).
+
+## Limits (v1)
+
+- Response bodies capped at 10 MB (client and recorder)
+- Recorder captures from attach time — use *Reload & Record* for a full page load
+- WebSocket frames not captured yet
+- Saved data (may include tokens) lives in `data/` — gitignored, keep it that way
+
+## Roadmap
+
+- [ ] Pre-request / test scripts
+- [ ] Mock server (replay recorded sessions)
+- [ ] OpenAPI 3.0 + Postman collection import/export
+- [ ] WebSocket frame capture
+- [ ] cURL import/export
+
+## License
+
+[MIT](LICENSE)
