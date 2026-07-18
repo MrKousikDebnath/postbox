@@ -23,8 +23,11 @@ const api = {
   cdpClearRecords: () => ipcRenderer.invoke('cdp:clear-records'),
   cdpGetBody: (requestId: string) => ipcRenderer.invoke('cdp:get-body', requestId),
 
+  aiSettings: () => ipcRenderer.invoke('ai:settings'),
+  aiSetBackend: (backend: string) => ipcRenderer.invoke('ai:set-backend', backend),
   aiSetKey: (key: string) => ipcRenderer.invoke('ai:set-key', key),
-  aiHasKey: () => ipcRenderer.invoke('ai:has-key'),
+  aiSetOllamaModel: (model: string) => ipcRenderer.invoke('ai:set-ollama-model', model),
+  aiListOllama: () => ipcRenderer.invoke('ai:list-ollama'),
   aiAsk: (question: string, sessionId: string | null, history: unknown[]) =>
     ipcRenderer.invoke('ai:ask', question, sessionId, history),
 

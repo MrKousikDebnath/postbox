@@ -36,8 +36,15 @@ export interface PostboxApi {
   cdpClearRecords(): Promise<void>
   cdpGetBody(requestId: string): Promise<string>
 
+  aiSettings(): Promise<{
+    backend: 'local' | 'ollama' | 'anthropic'
+    hasAnthropicKey: boolean
+    ollamaModel: string
+  }>
+  aiSetBackend(backend: 'local' | 'ollama' | 'anthropic'): Promise<void>
   aiSetKey(key: string): Promise<void>
-  aiHasKey(): Promise<boolean>
+  aiSetOllamaModel(model: string): Promise<void>
+  aiListOllama(): Promise<string[]>
   aiAsk(
     question: string,
     sessionId: string | null,

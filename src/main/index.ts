@@ -85,8 +85,11 @@ function registerIpc(): void {
   ipcMain.handle('cdp:get-records', () => cdp.getRecords())
   ipcMain.handle('cdp:clear-records', () => cdp.clearRecords())
   // ---- AI (RAG over recorded traffic) ----
+  ipcMain.handle('ai:settings', () => ai.getSettings())
+  ipcMain.handle('ai:set-backend', (_e, backend: ai.Backend) => ai.setBackend(backend))
   ipcMain.handle('ai:set-key', (_e, key: string) => ai.setApiKey(key))
-  ipcMain.handle('ai:has-key', () => ai.hasApiKey())
+  ipcMain.handle('ai:set-ollama-model', (_e, model: string) => ai.setOllamaModel(model))
+  ipcMain.handle('ai:list-ollama', () => ai.listOllamaModels())
   ipcMain.handle(
     'ai:ask',
     (

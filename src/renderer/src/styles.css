@@ -970,6 +970,12 @@ input[type='checkbox'] {
   border-bottom: 1px solid var(--glass-border);
 }
 
+.askai-backends {
+  display: flex;
+  gap: 6px;
+  padding: 10px 14px 0;
+}
+
 .askai-keysetup {
   padding: 14px;
 }
