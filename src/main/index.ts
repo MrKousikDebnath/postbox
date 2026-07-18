@@ -3,6 +3,7 @@ import path from 'path'
 import { executeRequest, type ExecutableRequest } from './http'
 import { storage } from './storage'
 import * as cdp from './cdp'
+import { printBanner } from './banner'
 import type { Collection, Environment, HistoryEntry, RecordingSession } from '../shared/types'
 
 const MAX_HISTORY = 200
@@ -33,6 +34,7 @@ function createWindow(): void {
 }
 
 app.whenReady().then(() => {
+  printBanner(app.getVersion())
   registerIpc()
   createWindow()
   app.on('activate', () => {

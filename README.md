@@ -1,5 +1,16 @@
 # 📮 PostBox
 
+```
+  ____           _   ____
+ |  _ \ ___  ___| |_| __ )  _____  __
+ | |_) / _ \/ __| __|  _ \ / _ \ \/ /
+ |  __/ (_) \__ \ |_| |_) | (_) >  <
+ |_|   \___/|___/\__|____/ \___/_/\_\
+
+  :: A Project by KD ::
+```
+
+[![A Project by KD](https://img.shields.io/badge/A%20Project%20by-KD-ff6c37)](https://github.com/MrKousikDebnath)
 [![CI](https://github.com/MrKousikDebnath/postbox/actions/workflows/ci.yml/badge.svg)](https://github.com/MrKousikDebnath/postbox/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 ![Electron](https://img.shields.io/badge/Electron-31-47848F?logo=electron&logoColor=white)
